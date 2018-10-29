@@ -1,7 +1,7 @@
 #!/bin/bash
 ## mockup
 ## - generates images for mockup web design
-## version 0.0.1 - initial
+## version 0.0.2 - default output format png
 ##################################################
 mockup-find-images() {
  find . \
@@ -14,7 +14,7 @@ mockup-convert-image() {
  echo ${image} ${count}
  file ${image}
  du -d 0 -h ${image}
- convert ${image} -resize 300x out/comp-${count}.jpg
+ convert ${image} -resize 300x out/comp-${count}.${output_format-png}
 }
 #-------------------------------------------------
 mockup-initialize() {

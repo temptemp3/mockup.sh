@@ -3,46 +3,186 @@
 ## - generates images for mockup web design
 ## version 0.0.1 - initial
 ##################################################
-mockup-find-images() {
- find . \
- -maxdepth 1 \
- -type f \
- -name \*jpg -o -name \*png
+. ${SH2}/cecho.sh
+. ${SH2}/aliases/commands.sh
+#-------------------------------------------------
+convert() {
+  #-negate \
+  #-flatten \
+  #-modulate 100 \
+  command convert \
+  "${image}" \
+  -resize ${resize} \
+  -rotate "${rotate-0}" \
+  -gravity center -crop 218x218+0+0 \
+  -level "${level}"\
+  -strip \
+  out/${outfile_base-comp}-${count}.jpg
 }
 #-------------------------------------------------
-mockup-convert-image() {
+find-candidate-outfile-basename() {
+  find -type f -name \*.docx |
+  head -n 1 |
+  xargs basename
+}
+#-------------------------------------------------
+find-candidate-image-dir-from-docx() {
+  local candidate_image_dir
+  candidate_image_dir=$(
+    find-candidate-outfile-basename |
+    cut '-d_' '-f2' |
+    cut '-d.' '-f1'
+  )
+  cecho yellow "candidate_image_dir: ${candidate_image_dir}"
+  test ! "${candidate_image_dir}" || {
+    test ! -d "${_}" || {
+      echo "${_}"
+    }
+  }
+}
+#-------------------------------------------------
+find-candidate-outfile-base-from-docx() {
+  find-candidate-outfile-basename |
+  cut '-d_' '-f1'
+}
+#-------------------------------------------------
+mockup-find-images() {
+ find ${image_dir} \
+ -maxdepth 1 \
+ -type f \
+ -name \*jpg -o -name \*png -o -name \*JPG 
+}
+#-------------------------------------------------
+mockup-convert-image() { { local image ; image="${@}" ; }
+ local area_raw
+ local width
+ local height
+ local area_calculated
+ local resize
+ resize=${inresize-260}
  echo ${image} ${count}
- file ${image}
- du -d 0 -h ${image}
- convert ${image} -resize 300x out/comp-${count}.jpg
+ file "${image}"
+ du -d 0 -h "${image}"
+ for resize in x${resize} ${resize}x #{x218,218x}
+ do
+ {
+    convert out/${outfile_base-comp}-${count}.jpg
+    area_raw=$( identify ${_} | cut '-d ' '-f3' )
+    width=$( echo ${area_raw} | cut '-dx'  '-f1' )
+    height=$( echo ${area_raw} | cut '-dx'  '-f2' )
+    area_calculated=$(( width *  height ))
+    cecho yellow "area_raw: ${area_raw}"
+    cecho yellow "width: ${width}"
+    cecho yellow "height: ${height}"
+    cecho yellow "area_calculated: ${area_calculated}"
+ }
+ test ! ${area_calculated} -eq 47524 || break
+ done
+}
+#-------------------------------------------------
+mockup-initialize-directories-out() {
+  _() {
+    test -d "${1}" || {
+      mkdir ${1}
+    }
+    find ${1} -type f | xargs -I {} rm -v "{}"
+  }
+  _ out
+  unset -f "_"
+}
+mockup-initialize-directories() {
+  ${FUNCNAME}-out
+}
+#-------------------------------------------------
+mockup-initialize-globals-count() {
+ ## count
+ count=${incount-1}
+}
+#-------------------------------------------------
+mockup-initialize-globals-outfile-base-docx() {
+ ## - using docx
+ test "$( find-candidate-outfile-base-from-docx )" || {
+   outfile_base=$( find-candidate-outfile-base-from-docx )
+   outfile_base_using="docx"
+ }
+}
+#-------------------------------------------------
+mockup-initialize-globals-outfile-base-file() {
+  ## - using file
+  test ! -f "outfile-base" || { 
+    outfile_base=$( cat ${_} )
+  }
+}
+#-------------------------------------------------
+mockup-initialize-globals-outfile-base() {
+  ## outfile_base
+  outfile_base=${inoutfile_base}
+  test "${outfile_base}" || ${FUNCNAME}-docx
+  test "${outfile_base}" || ${FUNCNAME}-file
+}
+#-------------------------------------------------
+mockup-initialize-globals-image-dir() {
+  image_dir="./" 
+  find-candidate-image-dir-from-docx
+  test ! "$( find-candidate-image-dir-from-docx )" || {
+    image_dir="$( find-candidate-image-dir-from-docx )"
+  }
+}
+#-------------------------------------------------
+mockup-initialize-globals() {
+  ${FUNCNAME}-count
+  ${FUNCNAME}-outfile-base
+  ${FUNCNAME}-image-dir
+  cecho yellow "count: ${count}"
+  cecho yellow "outfile_base: ${outfile_base}"
+  cecho yellow "image_dir: ${image_dir}"
 }
 #-------------------------------------------------
 mockup-initialize() {
- test -d "out" || {
-  mkdir out
- }
- count=1
+  ${FUNCNAME}-directories
+  ${FUNCNAME}-globals
+}
+#-------------------------------------------------
+mockup-test-find-candidate-outfile-base-from-docx() {
+  find-candidate-outfile-base-from-docx
+}
+#-------------------------------------------------
+mockup-test() {
+  commands
+}
+#-------------------------------------------------
+mockup-main() {
+ local image_dir
+ local line
+ mockup-find-images | 
+ while read -r line
+ do
+  test ! "${inoffset}" || {
+    test ! ${inoffset} -ge ${count} || {
+      continue
+    }
+  }
+  mockup-convert-image ${line}
+  count=$(( ${count} + 1 ))
+ done 
 }
 #-------------------------------------------------
 mockup() {
- local image
- local count
- ${FUNCNAME}-initialize
- for image in $( ${FUNCNAME}-find-images )
- do
-  ${FUNCNAME}-convert-image
-  count=$(( ${count} + 1 ))
- done
+  local count
+  local outfile_base
+  local outfile_base_using
+  ${FUNCNAME}-initialize
+  commands
 }
 ##################################################
-if [ ${#} -eq 0 ] 
+if [ ! ] 
 then
  true
 else
  exit 1 # wrong args
 fi
 ##################################################
-mockup
+mockup ${@}
 ##################################################
 ## generated by create-stub2.sh v0.1.1
 ## on Wed, 01 Aug 2018 14:52:34 +0900

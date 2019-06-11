@@ -1,7 +1,7 @@
 #!/bin/bash
 ## mockup
 ## - generates images for mockup web design
-## version 0.0.1 - initial
+## version 0.0.2 - default output format png
 ##################################################
 . ${SH2}/cecho.sh
 . ${SH2}/aliases/commands.sh

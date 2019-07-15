@@ -1,7 +1,7 @@
 #!/bin/bash
 ## mockup
 ## - generates images for mockup web design
-## version 0.1.0 - handle incoming gravit crop size
+## version 0.1.1 - fix crop size default 
 ##################################################
 . ${SH2}/cecho.sh
 . ${SH2}/aliases/commands.sh
@@ -14,7 +14,7 @@ convert() {
   "${image}" \
   -resize ${resize} \
   -rotate "${rotate-0}" \
-  -gravity center -crop ${ingravitycropsize-218-218}+0+0 \
+  -gravity center -crop ${ingravitycropsize-218x218}+0+0 \
   -level "${level}"\
   -strip \
   out/${outfile_base-comp}-${count}.jpg

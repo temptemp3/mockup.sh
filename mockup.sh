@@ -1,7 +1,7 @@
 #!/bin/bash
 ## mockup
 ## - generates images for mockup web design
-## version 0.1.0 - handle incoming gravit crop size
+## version 0.1.0 - handle incoming gravity crop size
 ##################################################
 . ${SH2}/cecho.sh
 . ${SH2}/aliases/commands.sh

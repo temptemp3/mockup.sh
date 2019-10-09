@@ -1,7 +1,7 @@
 #!/bin/bash
 ## mockup
 ## - generates images for mockup web design
-## version 0.0.3 - add translation
+## version 0.2.0 - add translation
 ##################################################
 . ${SH2}/cecho.sh
 . ${SH2}/aliases/commands.sh
@@ -13,11 +13,11 @@ convert() {
   command convert \
   "${image}" \
   -resize ${resize} \
-  -rotate "${rotate-0}" \
-  -gravity center -crop 218x218+${intranslatex:0}+${intranslatey:0} \
+  -rotate "${rotate:-0}" \
+  -gravity center -crop ${ingravitycropsize:-218x218}+${intranslatex:-0}+${intranslatey:-0} \
   -level "${level}"\
   -strip \
-  out/${outfile_base-comp}-${count}.jpg
+  out/${outfile_base:-comp}-${count}.jpg
 }
 #-------------------------------------------------
 find-candidate-outfile-basename() {
@@ -59,7 +59,7 @@ mockup-convert-image() { { local image ; image="${@}" ; }
  local height
  local area_calculated
  local resize
- resize=${inresize-260}
+ resize=${inresize:-260}
  echo ${image} ${count}
  file "${image}"
  du -d 0 -h "${image}"
@@ -163,12 +163,12 @@ mockup-main() {
     }
   }
   mockup-convert-image ${line}
-  count=$(( ${count} + 1 ))
+  let count+=1
  done 
 }
 #-------------------------------------------------
 mockup() {
-  local count
+  local -i count
   local outfile_base
   local outfile_base_using
   ${FUNCNAME}-initialize

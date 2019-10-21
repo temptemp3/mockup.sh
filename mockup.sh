@@ -1,12 +1,17 @@
 #!/bin/bash
 ## mockup
 ## - generates images for mockup web design
-## version 0.2.0 - add translation
+## version 0.2.1 - disable crop on flag
 ##################################################
 . ${SH2}/cecho.sh
 . ${SH2}/aliases/commands.sh
 #-------------------------------------------------
 convert() {
+  if-do-crop() {
+    test "${nocrop}" = "true" || {
+      echo "-gravity center -crop ${ingravitycropsize:-218x218}+${intranslatex:-0}+${intranslatey:-0}"
+    }
+  }
   #-negate \
   #-flatten \
   #-modulate 100 \
@@ -14,7 +19,7 @@ convert() {
   "${image}" \
   -resize ${resize} \
   -rotate "${rotate:-0}" \
-  -gravity center -crop ${ingravitycropsize:-218x218}+${intranslatex:-0}+${intranslatey:-0} \
+  $( if-do-crop ) \
   -level "${level}"\
   -strip \
   out/${outfile_base:-comp}-${count}.jpg
@@ -178,7 +183,7 @@ mockup() {
 if [ ! ] 
 then
  true
-else
+else 
  exit 1 # wrong args
 fi
 ##################################################
